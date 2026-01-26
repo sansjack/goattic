@@ -1,0 +1,29 @@
+{
+  "name": "infra-cdk",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "prebuild": "cd ../lambda && go mod download",
+    "precheck": "./scripts/load-env.sh bash -c 'echo \"Using AWS Profile: $AWS_PROFILE\"'",
+    "bootstrap": "bun precheck && ./scripts/load-env.sh cdk bootstrap",
+    "diff": "bun prebuild && bun precheck && ./scripts/load-env.sh cdk diff",
+    "deploy": "bun prebuild && bun precheck && ./scripts/load-env.sh cdk deploy",
+    "synth": "bun prebuild && ./scripts/load-env.sh cdk synth",
+    "destroy": "bun precheck && ./scripts/load-env.sh cdk destroy",
+    "watch": "./scripts/load-env.sh cdk watch"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.13",
+    "@types/bun": "latest
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "aws-cdk": "^2.1103.0",
+    "aws-cdk-lib": "^2.236.0",
+    "constructs": "^10.4.5",
+    "zod": "^4.3.6"
+  }
+}
