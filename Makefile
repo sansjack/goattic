@@ -18,17 +18,17 @@ install:
 	cd server/lambda && go mod download
 	cd server/infra && bun install
 	@command -v cdklocal >/dev/null 2>&1 || { echo "Installing cdklocal..."; bun install -g aws-cdk-local aws-cdk; }
-	@echo "✓ Dependencies installed"
+	@echo "Dependencies installed"
 
 build:
 	@echo "Building Lambda binary..."
 	cd server/lambda && $(MAKE) build
-	@echo "✓ Lambda binary built"
+	@echo "Lambda binary built"
 
 deploy:
 	@echo "Deploying to AWS..."
 	cd server/infra && bun deploy
-	@echo "✓ Deployed to AWS"
+	@echo "Deployed to AWS"
 
 local:
 	@echo "Starting LocalStack..."
@@ -40,14 +40,14 @@ local:
 	      curl -s http://localhost:4566/_localstack/health | grep -q '"dynamodb": "available"'; do \
 		counter=$$((counter+1)); \
 		if [ $$counter -gt 40 ]; then \
-			echo "❌ LocalStack failed to start. Check logs with: make local-logs"; \
+			echo "LocalStack failed to start. Check logs with: make local-logs"; \
 			exit 1; \
 		fi; \
 		printf "."; \
 		sleep 3; \
 	done
 	@echo ""
-	@echo "✓ LocalStack is ready"
+	@echo "LocalStack is ready"
 	@echo ""
 	@echo "Next steps:"
 	@echo "  1. Run 'make local-bootstrap' (first time only)"
@@ -57,13 +57,13 @@ local:
 local-bootstrap:
 	@echo "Bootstrapping CDK in LocalStack..."
 	cd server/infra && bun local:bootstrap
-	@echo "✓ Bootstrap complete"
+	@echo "Bootstrap complete"
 
 local-deploy:
 	@echo "Deploying CDK stack to LocalStack..."
 	cd server/infra && bun local:deploy
 	@echo ""
-	@echo "✓ LocalStack deployed!"
+	@echo "LocalStack deployed!"
 	@echo "  - API Gateway: http://localhost:4566/restapis/"
 	@echo "  - DynamoDB: http://localhost:4566"
 	@echo "  - S3: http://localhost:4566"
@@ -73,7 +73,7 @@ local-deploy:
 local-down:
 	@echo "Stopping LocalStack..."
 	cd server/lambda && docker-compose down -v
-	@echo "✓ LocalStack stopped"
+	@echo "LocalStack stopped"
 
 local-logs:
 	cd server/lambda && docker-compose logs -f localstack
@@ -86,4 +86,4 @@ clean:
 	@echo "Cleaning build artifacts..."
 	cd server/lambda && $(MAKE) clean
 	cd server/infra && rm -rf cdk.out
-	@echo "✓ Cleaned"
+	@echo "Cleaned"
