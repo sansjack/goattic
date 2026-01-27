@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 
@@ -104,6 +105,18 @@ func respondJSON(w http.ResponseWriter, status int, data any) {
 
 func main() {
 	api := NewAPI()
-	adapter := chiadapter.New(api.router)
-	lambda.Start(adapter.ProxyWithContext)
+
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+		adapter := chiadapter.New(api.router)
+		lambda.Start(adapter.ProxyWithContext)
+	} else {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		log.Printf("Starting server on :%s", port)
+		if err := http.ListenAndServe(":"+port, api.router); err != nil {
+			log.Fatal(err)
+		}
+	}
 }

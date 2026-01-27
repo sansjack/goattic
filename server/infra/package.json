@@ -4,14 +4,17 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "prebuild": "cd ../lambda && go mod download",
+    "prebuild": "cd ../lambda && go mod download && make build",
     "precheck": "./scripts/load-env.sh bash -c 'echo \"Using AWS Profile: $AWS_PROFILE\"'",
     "bootstrap": "bun precheck && ./scripts/load-env.sh cdk bootstrap",
     "diff": "bun prebuild && bun precheck && ./scripts/load-env.sh cdk diff",
     "deploy": "bun prebuild && bun precheck && ./scripts/load-env.sh cdk deploy",
     "synth": "bun prebuild && ./scripts/load-env.sh cdk synth",
     "destroy": "bun precheck && ./scripts/load-env.sh cdk destroy",
-    "watch": "./scripts/load-env.sh cdk watch"
+    "watch": "./scripts/load-env.sh cdk watch",
+    "local:bootstrap": "EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal bootstrap",
+    "local:deploy": "bun prebuild && EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal deploy --require-approval never",
+    "local:destroy": "EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal destroy"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.13",

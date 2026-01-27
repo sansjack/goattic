@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=cloudformation,s3,dynamodb,lambda,apigateway,iam,sts,logs,cloudwatch,events,ssm
+      - DEBUG=1
+      - LAMBDA_EXECUTOR=local
+      - LAMBDA_REMOTE_DOCKER=0
+      - DISABLE_EVENTS=0
+      - LS_LOG=debug
+    volumes:
+      - "./localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"

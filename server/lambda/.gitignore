@@ -1,0 +1,4 @@
+build/
+localstack-data/
+bootstrap
+bootstrap.zip
