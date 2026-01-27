@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
+	chiadapter "github.com/awslabs/aws-lambda-go-api-proxy/chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -104,5 +104,6 @@ func respondJSON(w http.ResponseWriter, status int, data any) {
 
 func main() {
 	api := NewAPI()
-	lambda.Start(httpadapter.NewV2(api.router).ProxyWithContext)
+	adapter := chiadapter.New(api.router)
+	lambda.Start(adapter.ProxyWithContext)
 }

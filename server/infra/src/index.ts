@@ -18,7 +18,7 @@ const stack = new Stack(app, "goattic", {
 });
 
 const bucket = new s3.Bucket(stack, "goattic", {
-  bucketName: "goattic-storage-bucket",
+  bucketName: "goattic-storage-bucket-1",
   versioned: true,
   removalPolicy: isDev ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
   autoDeleteObjects: isDev ? true : false,
