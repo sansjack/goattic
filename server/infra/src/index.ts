@@ -25,17 +25,22 @@ const bucket = new s3.Bucket(stack, "goattic", {
 });
 
 const table = new dynamodb.Table(stack, "GoAtticTable", {
-  tableName: "goattic-data",
+  tableName: "goattic-apikeys",
   partitionKey: {
-    name: "id",
+    name: "apiKey",
     type: dynamodb.AttributeType.STRING,
   },
-  sortKey: {
-    name: "timestamp",
-    type: dynamodb.AttributeType.NUMBER,
-  },
   billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-  removalPolicy: RemovalPolicy.DESTROY,
+  removalPolicy: isDev ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+});
+
+table.addGlobalSecondaryIndex({
+  indexName: "OwnerIndex",
+  partitionKey: {
+    name: "owner",
+    type: dynamodb.AttributeType.STRING,
+  },
+  projectionType: dynamodb.ProjectionType.ALL,
 });
 
 const handler = new lambda.Function(stack, "GoAtticHandler", {

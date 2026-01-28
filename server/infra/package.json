@@ -9,11 +9,15 @@
     "bootstrap": "bun precheck && ./scripts/load-env.sh cdk bootstrap",
     "diff": "bun prebuild && bun precheck && ./scripts/load-env.sh cdk diff",
     "deploy": "bun prebuild && bun precheck && ./scripts/load-env.sh cdk deploy",
+    "postdeploy": "./scripts/load-env.sh bun run scripts/seed-db.ts",
+    "seed": "./scripts/load-env.sh bun run scripts/seed-db.ts",
     "synth": "bun prebuild && ./scripts/load-env.sh cdk synth",
     "destroy": "bun precheck && ./scripts/load-env.sh cdk destroy",
     "watch": "./scripts/load-env.sh cdk watch",
     "local:bootstrap": "EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal bootstrap",
-    "local:deploy": "bun prebuild && EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal deploy --require-approval never",
+    "local:deploy": "bun prebuild && EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal deploy --require-approval never && bun run local:postdeploy",
+    "local:postdeploy": "EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=us-east-1 AWS_ENDPOINT_URL=http://localhost:4566 bun run scripts/seed-db.ts",
+    "local:seed": "EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=us-east-1 AWS_ENDPOINT_URL=http://localhost:4566 bun run scripts/seed-db.ts",
     "local:destroy": "EDGE_PORT=4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=eu-west-2 cdklocal destroy"
   },
   "devDependencies": {
@@ -24,6 +28,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/util-dynamodb": "^3.0.0",
     "aws-cdk": "^2.1103.0",
     "aws-cdk-lib": "^2.236.0",
     "constructs": "^10.4.5",

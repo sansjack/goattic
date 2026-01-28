@@ -1,4 +1,4 @@
-# MediaGo
+# GoAttic
 
 Go-based serverless API with AWS CDK infrastructure.
 

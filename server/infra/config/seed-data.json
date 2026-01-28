@@ -1,0 +1,16 @@
+[
+  {
+    "apiKey": "dev-test-key-12345",
+    "owner": "test-user@example.com",
+    "createdAt": "2026-01-28T00:00:00Z",
+    "rateLimit": 1000,
+    "enabled": true
+  },
+  {
+    "apiKey": "dev-admin-key-67890",
+    "owner": "admin@example.com",
+    "createdAt": "2026-01-28T00:00:00Z",
+    "rateLimit": 10000,
+    "enabled": true
+  }
+]

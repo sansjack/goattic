@@ -1,0 +1,5 @@
+build/
+localstack-data/
+bootstrap
+bootstrap.zip
+.DS_Store
