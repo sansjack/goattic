@@ -43,7 +43,6 @@ func (a *API) Router() *chi.Mux {
 
 func (a *API) handleRoot(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]string{
-		"message": "GoAttic API",
 		"version": "1.0.0",
 	})
 }
