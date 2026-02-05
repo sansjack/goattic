@@ -3,6 +3,7 @@
 help:
 	@echo "Available commands:"
 	@echo "  make install         - Install all dependencies (Go, Bun)"
+	@echo "  make bootstrap       - Bootstrap CDK in AWS (run once per account)"
 	@echo "  make build           - Build Lambda binary for deployment"
 	@echo "  make deploy          - Deploy to AWS"
 	@echo "  make local           - Start LocalStack (run once)"
@@ -20,6 +21,12 @@ install:
 	@command -v cdklocal >/dev/null 2>&1 || { echo "Installing cdklocal..."; bun install -g aws-cdk-local aws-cdk; }
 	@echo "Dependencies installed"
 
+bootstrap:
+	@echo "Bootstrapping CDK in AWS..."
+	@echo "This will bootstrap both your main region and us-east-1 (required for CloudFront)"
+	cd server/infra && bun run bootstrap
+	@echo "Bootstrap complete"
+
 build:
 	@echo "Building Lambda binary..."
 	cd server/lambda && $(MAKE) build
@@ -27,7 +34,10 @@ build:
 
 deploy:
 	@echo "Deploying to AWS..."
-	cd server/infra && bun deploy
+	@echo "Step 1: Deploying media certificate stack (us-east-1)..."
+	cd server/infra && bun --env-file=.env cdk deploy GoAtticMediaStack --require-approval never
+	@echo "Step 2: Deploying main stack..."
+	cd server/infra && bun --env-file=.env cdk deploy goattic --require-approval never
 	@echo "Deployed to AWS"
 
 local:
