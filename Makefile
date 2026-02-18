@@ -1,49 +1,65 @@
-.PHONY: help install build deploy local local-bootstrap local-deploy local-down local-logs dev clean
+CDK            := bun --env-file=.env cdk
+CDK_LOCAL      := bun --env-file=.env.local cdklocal
+
+LAMBDAS := server/lambdas/api server/lambdas/file-validator
+
+.PHONY: help install build deploy diff synth destroy \
+        local local-bootstrap local-deploy local-down local-logs \
+        dev seed clean
 
 help:
 	@echo "Available commands:"
-	@echo "  make install         - Install all dependencies (Go, Bun)"
-	@echo "  make bootstrap       - Bootstrap CDK in AWS (run once per account)"
-	@echo "  make build           - Build Lambda binary for deployment"
-	@echo "  make deploy          - Deploy to AWS"
-	@echo "  make local           - Start LocalStack (run once)"
-	@echo "  make local-bootstrap - Bootstrap CDK in LocalStack (run once)"
-	@echo "  make local-deploy    - Deploy CDK stack to LocalStack"
-	@echo "  make local-down      - Stop LocalStack and clean up"
-	@echo "  make local-logs      - View LocalStack logs"
-	@echo "  make dev             - Run API locally against LocalStack"
-	@echo "  make clean           - Clean build artifacts"
+	@echo "  make install          Install all dependencies"
+	@echo "  make build            Build all Lambda binaries"
+	@echo "  make deploy           Build + deploy to AWS"
+	@echo "  make diff             Build + show CDK diff"
+	@echo "  make synth            Build + synthesize CloudFormation"
+	@echo "  make destroy          Destroy AWS stacks"
+	@echo ""
+	@echo "  make local            Start LocalStack"
+	@echo "  make local-bootstrap  Bootstrap CDK in LocalStack (once)"
+	@echo "  make local-deploy     Build + deploy to LocalStack"
+	@echo "  make local-down       Stop LocalStack"
+	@echo "  make local-logs       Tail LocalStack logs"
+	@echo ""
+	@echo "  make dev              Run API locally against LocalStack"
+	@echo "  make seed             Seed database"
+	@echo "  make clean            Clean all build artifacts"
 
 install:
 	@echo "Installing dependencies..."
-	cd server/lambda && go mod download
+	@for dir in $(LAMBDAS); do cd $$dir && go mod download && cd -; done
+	cd server/lambdas && go work sync
 	cd server/infra && bun install
-	@command -v cdklocal >/dev/null 2>&1 || { echo "Installing cdklocal..."; bun install -g aws-cdk-local aws-cdk; }
 	@echo "Dependencies installed"
 
-bootstrap:
-	@echo "Bootstrapping CDK in AWS..."
-	@echo "This will bootstrap both your main region and us-east-1 (required for CloudFront)"
-	cd server/infra && bun run bootstrap
-	@echo "Bootstrap complete"
-
 build:
-	@echo "Building Lambda binary..."
-	cd server/lambda && $(MAKE) build
-	@echo "Lambda binary built"
+	@echo "Building Lambda binaries..."
+	@for dir in $(LAMBDAS); do $(MAKE) -C $$dir build; done
+	@echo "Build complete"
 
-deploy:
+# --- AWS ---
+
+deploy: build
 	@echo "Deploying to AWS..."
-	@echo "Step 1: Deploying media certificate stack (us-east-1)..."
-	cd server/infra && bun --env-file=.env cdk deploy GoAtticMediaStack --require-approval never
-	@echo "Step 2: Deploying main stack..."
-	cd server/infra && bun --env-file=.env cdk deploy goattic --require-approval never
-	@echo "Deployed to AWS"
+	cd server/infra && $(CDK) deploy --all --require-approval never
+	@echo "Deployed"
+
+diff: build
+	cd server/infra && $(CDK) diff
+
+synth: build
+	cd server/infra && $(CDK) synth
+
+destroy:
+	cd server/infra && $(CDK) destroy
+
+# --- Local ---
 
 local:
 	@echo "Starting LocalStack..."
-	cd server/lambda && docker-compose up -d localstack
-	@echo "Waiting for LocalStack to be ready (this may take 30-60 seconds)..."
+	cd server/lambdas/api && docker-compose up -d localstack
+	@echo "Waiting for LocalStack..."
 	@counter=0; \
 	until curl -s http://localhost:4566/_localstack/health | grep -q '"cloudformation": "available"' && \
 	      curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"' && \
@@ -58,42 +74,29 @@ local:
 	done
 	@echo ""
 	@echo "LocalStack is ready"
-	@echo ""
-	@echo "Next steps:"
-	@echo "  1. Run 'make local-bootstrap' (first time only)"
-	@echo "  2. Run 'make local-deploy' to deploy your stack"
-	@echo "  3. Run 'make dev' to start the local API server"
 
 local-bootstrap:
-	@echo "Bootstrapping CDK in LocalStack..."
-	cd server/infra && bun local:bootstrap
-	@echo "Bootstrap complete"
+	cd server/infra && $(CDK_LOCAL) bootstrap
 
-local-deploy:
-	@echo "Deploying CDK stack to LocalStack..."
-	cd server/infra && bun local:deploy
-	@echo ""
-	@echo "LocalStack deployed!"
-	@echo "  - API Gateway: http://localhost:4566/restapis/"
-	@echo "  - DynamoDB: http://localhost:4566"
-	@echo "  - S3: http://localhost:4566"
-	@echo ""
-	@echo "Run 'make dev' to start the local API server"
+local-deploy: build
+	@echo "Deploying to LocalStack..."
+	cd server/infra && $(CDK_LOCAL) deploy --require-approval never
+	cd server/infra && bun --env-file=.env.local run scripts/seed-db.ts
+	@echo "LocalStack deployed"
 
 local-down:
-	@echo "Stopping LocalStack..."
-	cd server/lambda && docker-compose down -v
-	@echo "LocalStack stopped"
+	cd server/lambdas/api && docker-compose down -v
 
 local-logs:
-	cd server/lambda && docker-compose logs -f localstack
+	cd server/lambdas/api && docker-compose logs -f localstack
 
 dev:
-	@echo "Starting local API server..."
-	cd server/lambda && $(MAKE) dev
+	cd server/lambdas/api && $(MAKE) dev
+
+seed:
+	cd server/infra && bun --env-file=.env run scripts/seed-db.ts
 
 clean:
-	@echo "Cleaning build artifacts..."
-	cd server/lambda && $(MAKE) clean
+	@for dir in $(LAMBDAS); do $(MAKE) -C $$dir clean; done
 	cd server/infra && rm -rf cdk.out
 	@echo "Cleaned"

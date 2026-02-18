@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"goattic-lambda/internal/api"
-	"goattic-lambda/internal/storage"
+	"goattic-api/internal/api"
+	"goattic-api/internal/storage"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	chiadapter "github.com/awslabs/aws-lambda-go-api-proxy/chi"

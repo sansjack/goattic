@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"goattic-lambda/internal/auth"
-	"goattic-lambda/internal/storage"
+	"goattic-api/internal/auth"
+	"goattic-api/internal/storage"
 )
 
 type contextKey string

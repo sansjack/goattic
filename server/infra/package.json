@@ -4,21 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "prebuild": "cd ../lambda && go mod download && make build",
-    "precheck": "bash -c 'source .env 2>/dev/null && echo \"Using AWS Profile: $AWS_PROFILE\"'",
-    "bootstrap": "bun precheck && bun --env-file=.env cdk bootstrap && bun --env-file=.env cdk bootstrap aws://$(bun --env-file=.env aws sts get-caller-identity --query Account --output text)/us-east-1",
-    "diff": "bun prebuild && bun precheck && bun --env-file=.env cdk diff",
-    "deploy": "bun prebuild && bun precheck && bun --env-file=.env cdk deploy --all",
-    "postdeploy": "bun --env-file=.env run scripts/seed-db.ts",
-    "seed": "bun --env-file=.env run scripts/seed-db.ts",
-    "synth": "bun prebuild && bun --env-file=.env cdk synth",
-    "destroy": "bun precheck && bun --env-file=.env cdk destroy",
-    "watch": "bun --env-file=.env cdk watch",
-    "local:bootstrap": "bun --env-file=.env.local cdklocal bootstrap",
-    "local:deploy": "bun prebuild && bun --env-file=.env.local cdklocal deploy --require-approval never && bun run local:postdeploy",
-    "local:postdeploy": "bun --env-file=.env.local run scripts/seed-db.ts",
-    "local:seed": "bun --env-file=.env.local run scripts/seed-db.ts",
-    "local:destroy": "bun --env-file=.env.local cdklocal destroy"
+    "seed": "bun --env-file=.env run scripts/seed-db.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.13",

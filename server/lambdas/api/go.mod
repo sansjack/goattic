@@ -1,6 +1,8 @@
-module goattic-lambda
+module goattic-api
 
-go 1.23
+go 1.25.3
+
+replace goattic-shared => ../shared
 
 require (
 	github.com/aws/aws-lambda-go v1.47.0

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"goattic-lambda/internal/storage"
+	"goattic-api/internal/storage"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -72,6 +72,7 @@ func (a *API) handleListKeys(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleUpload(w http.ResponseWriter, r *http.Request) {
+
 	respondJSON(w, http.StatusOK, map[string]string{
 		"message": "Upload endpoint - implement file upload logic",
 	})
