@@ -5,6 +5,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import type { Construct } from "constructs";
 import type { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -149,16 +150,26 @@ export class ApplicationStack extends Stack {
           {
             httpStatus: 403,
             responseHttpStatus: 404,
+            responsePagePath: "/404.json",
             ttl: cdk.Duration.seconds(0),
           },
           {
             httpStatus: 404,
             responseHttpStatus: 404,
+            responsePagePath: "/404.json",
             ttl: cdk.Duration.seconds(0),
           },
         ],
       },
     );
+
+    //hacky but we're keeping this cheap!
+    new s3deploy.BucketDeployment(this, "ErrorPages", {
+      sources: [s3deploy.Source.jsonData("404.json", { error: "Not Found" })],
+      destinationBucket: publicBucket,
+      distribution,
+      distributionPaths: ["/404.json"],
+    });
 
     new CfnOutput(this, "ApiEndpoint", {
       value: api.url,
