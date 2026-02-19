@@ -1,3 +1,4 @@
+import * as cdk from "aws-cdk-lib";
 import { Stack, type StackProps, RemovalPolicy, CfnOutput } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
@@ -144,6 +145,18 @@ export class ApplicationStack extends Stack {
         domainNames: [props.mediaDomainName],
         certificate: props.cloudFrontCertificate,
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responseHttpStatus: 404,
+            ttl: cdk.Duration.seconds(0),
+          },
+          {
+            httpStatus: 404,
+            responseHttpStatus: 404,
+            ttl: cdk.Duration.seconds(0),
+          },
+        ],
       },
     );
 
