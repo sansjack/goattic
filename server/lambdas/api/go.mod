@@ -1,6 +1,6 @@
 module goattic-api
 
-go 1.25.3
+go 1.26
 
 replace goattic-shared => ../shared
 
@@ -13,6 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.1
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
 	github.com/go-chi/chi/v5 v5.2.0
+	github.com/sixafter/nanoid v1.63.1
 )
 
 require (
@@ -34,4 +35,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.3 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/sixafter/aes-ctr-drbg v1.17.0 // indirect
+	github.com/sixafter/prng-chacha v1.15.0 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 )

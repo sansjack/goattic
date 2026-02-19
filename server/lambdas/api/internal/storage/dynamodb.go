@@ -19,6 +19,7 @@ type DynamoDBClient struct {
 
 // keep in sync with the CDK construct definition and seed data
 type APIKey struct {
+	ID        string `dynamodbav:"id"`
 	APIKey    string `dynamodbav:"apiKey"`
 	Owner     string `dynamodbav:"owner"`
 	CreatedAt string `dynamodbav:"createdAt"`
@@ -50,22 +51,25 @@ func NewDynamoDBClient(ctx context.Context) (*DynamoDBClient, error) {
 }
 
 func (d *DynamoDBClient) ValidateAPIKey(ctx context.Context, apiKey string) (*APIKey, error) {
-	result, err := d.client.GetItem(ctx, &dynamodb.GetItemInput{
-		TableName: aws.String(d.tableName),
-		Key: map[string]types.AttributeValue{
-			"apiKey": &types.AttributeValueMemberS{Value: apiKey},
+	result, err := d.client.Query(ctx, &dynamodb.QueryInput{
+		TableName:              aws.String(d.tableName),
+		IndexName:              aws.String("ApiKeyIndex"),
+		KeyConditionExpression: aws.String("apiKey = :apiKey"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":apiKey": &types.AttributeValueMemberS{Value: apiKey},
 		},
+		Limit: aws.Int32(1),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get item: %w", err)
+		return nil, fmt.Errorf("failed to query API key: %w", err)
 	}
 
-	if result.Item == nil {
+	if len(result.Items) == 0 {
 		return nil, fmt.Errorf("API key not found")
 	}
 
 	var key APIKey
-	if err := attributevalue.UnmarshalMap(result.Item, &key); err != nil {
+	if err := attributevalue.UnmarshalMap(result.Items[0], &key); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal item: %w", err)
 	}
 

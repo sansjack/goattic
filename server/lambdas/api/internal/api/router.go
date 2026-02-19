@@ -2,23 +2,28 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"path/filepath"
 
 	"goattic-api/internal/storage"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sixafter/nanoid"
 )
 
 type API struct {
-	db *storage.DynamoDBClient
-	s3 *storage.S3Client
+	db          *storage.DynamoDBClient
+	s3          *storage.S3Client
+	mediaDomain string
 }
 
-func NewAPI(db *storage.DynamoDBClient, s3 *storage.S3Client) *API {
+func NewAPI(db *storage.DynamoDBClient, s3 *storage.S3Client, mediaDomain string) *API {
 	return &API{
-		db: db,
-		s3: s3,
+		db:          db,
+		s3:          s3,
+		mediaDomain: mediaDomain,
 	}
 }
 
@@ -34,7 +39,7 @@ func (a *API) Router() *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(AuthMiddleware(a.db))
 
-		r.Get("/keys", a.handleListKeys)
+		r.Get("/key", a.handleGetKey)
 		r.Post("/upload", a.handleUpload)
 	})
 
@@ -53,28 +58,64 @@ func (a *API) handleHealth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (a *API) handleListKeys(w http.ResponseWriter, r *http.Request) {
+func (a *API) handleGetKey(w http.ResponseWriter, r *http.Request) {
 	apiKey := GetAPIKeyFromContext(r.Context())
 	if apiKey == nil {
 		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	keys, err := a.db.ListAPIKeysByOwner(r.Context(), apiKey.Owner)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to list keys")
-		return
-	}
-
 	respondJSON(w, http.StatusOK, map[string]any{
-		"keys": keys,
+		"id":        apiKey.ID,
+		"owner":     apiKey.Owner,
+		"createdAt": apiKey.CreatedAt,
+		"rateLimit": apiKey.RateLimit,
+		"enabled":   apiKey.Enabled,
 	})
 }
 
 func (a *API) handleUpload(w http.ResponseWriter, r *http.Request) {
+	apiKey := GetAPIKeyFromContext(r.Context())
+	if apiKey == nil {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-	respondJSON(w, http.StatusOK, map[string]string{
-		"message": "Upload endpoint - implement file upload logic",
+	var req struct {
+		Filename string `json:"filename"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if req.Filename == "" {
+		respondError(w, http.StatusBadRequest, "filename is required")
+		return
+	}
+
+	ext := filepath.Ext(req.Filename)
+	id, err := nanoid.NewWithLength(12)
+
+	if err != nil {
+		panic(err)
+	}
+	key := fmt.Sprintf("%s/%s%s", apiKey.ID, id.String(), ext)
+
+	presignedPost, err := a.s3.GeneratePresignedPostURL(r.Context(), key)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to generate upload URL")
+		return
+	}
+
+	publicURL := fmt.Sprintf("https://%s/%s", a.mediaDomain, key)
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"presignedPost": map[string]any{
+			"url":    presignedPost.URL,
+			"fields": presignedPost.Values,
+		},
+		"key":       key,
+		"publicUrl": publicURL,
 	})
 }
 

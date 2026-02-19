@@ -25,6 +25,8 @@ func main() {
 	s3Client := s3.NewFromConfig(cfg)
 
 	webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
+	publicBucket := os.Getenv("PUBLIC_BUCKET_NAME")
+	mediaDomain := os.Getenv("MEDIA_DOMAIN")
 	dispatcher := discord.NewDispatcher(webhookURL)
 
 	lambda.Start(func(ctx context.Context, event events.S3Event) error {
@@ -57,11 +59,22 @@ func main() {
 				continue
 			}
 
-			log.Printf("File validated: s3://%s/%s type=%s size=%d", bucket, key, fileType, size)
+			log.Printf("File validated: s3://%s/%s type=%s size=%d — copying to public bucket", bucket, key, fileType, size)
+
+			if err := validate.CopyObject(ctx, s3Client, bucket, publicBucket, key, fileType); err != nil {
+				log.Printf("ERROR: failed to copy s3://%s/%s to public bucket: %v", bucket, key, err)
+				continue
+			}
+
+			if err := validate.DeleteObject(ctx, s3Client, bucket, key); err != nil {
+				log.Printf("ERROR: failed to delete s3://%s/%s after copy: %v", bucket, key, err)
+			}
+
+			publicURL := fmt.Sprintf("https://%s/%s", mediaDomain, key)
 			dispatcher.Send(discord.WebhookPayload{
 				Embeds: []discord.Embed{{
-					Title:       "File validated",
-					Description: fmt.Sprintf("`s3://%s/%s`\nType: **%s** | Size: %d bytes", bucket, key, fileType, size),
+					Title:       "File validated and published",
+					Description: fmt.Sprintf("Type: **%s** | Size: %d bytes\n%s", fileType, size, publicURL),
 					Color:       0x00FF00,
 				}},
 			})

@@ -73,6 +73,7 @@ export class ApplicationStack extends Stack {
         PRIVATE_BUCKET_NAME: privateBucket.bucketName,
         PUBLIC_BUCKET_NAME: publicBucket.bucketName,
         TABLE_NAME: table.tableName,
+        MEDIA_DOMAIN: props.mediaDomainName,
       },
     });
 
@@ -80,6 +81,8 @@ export class ApplicationStack extends Stack {
       codePath: "../lambdas/file-validator/build",
       environment: {
         DISCORD_WEBHOOK_URL: environmentVars.DISCORD_WEBHOOK_URL,
+        PUBLIC_BUCKET_NAME: publicBucket.bucketName,
+        MEDIA_DOMAIN: props.mediaDomainName,
       },
       s3Trigger: {
         bucket: privateBucket,
@@ -89,6 +92,7 @@ export class ApplicationStack extends Stack {
 
     privateBucket.grantReadWrite(apiHandler.fn);
     publicBucket.grantReadWrite(apiHandler.fn);
+    publicBucket.grantReadWrite(fileValidator.fn);
     table.grantReadWriteData(apiHandler.fn);
 
     const apiCertificate = certificatemanager.Certificate.fromCertificateArn(

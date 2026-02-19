@@ -5,7 +5,7 @@ LAMBDAS := server/lambdas/api server/lambdas/file-validator
 
 .PHONY: help install build deploy diff synth destroy \
         local local-bootstrap local-deploy local-down local-logs \
-        dev seed clean
+        dev seed create-key clean
 
 help:
 	@echo "Available commands:"
@@ -24,6 +24,7 @@ help:
 	@echo ""
 	@echo "  make dev              Run API locally against LocalStack"
 	@echo "  make seed             Seed database"
+	@echo "  make create-key       Create API key (OWNER=name)"
 	@echo "  make clean            Clean all build artifacts"
 
 install:
@@ -95,6 +96,10 @@ dev:
 
 seed:
 	cd server/infra && bun --env-file=.env run scripts/seed-db.ts
+
+create-key:
+	@if [ -z "$(OWNER)" ]; then echo "Usage: make create-key OWNER=<name>"; exit 1; fi
+	cd server/infra && bun --env-file=.env run scripts/create-key.ts $(OWNER)
 
 clean:
 	@for dir in $(LAMBDAS); do $(MAKE) -C $$dir clean; done

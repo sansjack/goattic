@@ -15,7 +15,8 @@ import (
 type S3Client struct {
 	client        *s3.Client
 	presignClient *s3.PresignClient
-	bucketName    string
+	privateBucket string
+	publicBucket  string
 }
 
 func NewS3Client(ctx context.Context) (*S3Client, error) {
@@ -33,21 +34,17 @@ func NewS3Client(ctx context.Context) (*S3Client, error) {
 
 	presignClient := s3.NewPresignClient(client)
 
-	bucketName := os.Getenv("BUCKET_NAME")
-	if bucketName == "" {
-		bucketName = "goattic-storage-bucket"
-	}
-
 	return &S3Client{
 		client:        client,
 		presignClient: presignClient,
-		bucketName:    bucketName,
+		privateBucket: os.Getenv("PRIVATE_BUCKET_NAME"),
+		publicBucket:  os.Getenv("PUBLIC_BUCKET_NAME"),
 	}, nil
 }
 
 func (s *S3Client) UploadFile(ctx context.Context, key string, body io.Reader) error {
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(s.bucketName),
+		Bucket: aws.String(s.privateBucket),
 		Key:    aws.String(key),
 		Body:   body,
 	})
@@ -60,7 +57,7 @@ func (s *S3Client) UploadFile(ctx context.Context, key string, body io.Reader) e
 
 func (s *S3Client) GetFile(ctx context.Context, key string) (io.ReadCloser, error) {
 	result, err := s.client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(s.bucketName),
+		Bucket: aws.String(s.privateBucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
@@ -72,9 +69,8 @@ func (s *S3Client) GetFile(ctx context.Context, key string) (io.ReadCloser, erro
 
 func (s *S3Client) GeneratePresignedPostURL(ctx context.Context, key string) (*s3.PresignedPostRequest, error) {
 	request, err := s.presignClient.PresignPostObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(s.bucketName),
+		Bucket: aws.String(s.privateBucket),
 		Key:    aws.String(key),
-		
 	}, func(opts *s3.PresignPostOptions) {
 		opts.Expires = 5 * time.Minute
 	})

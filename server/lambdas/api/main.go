@@ -26,7 +26,8 @@ func main() {
 		log.Fatal("Failed to create S3 client:", err)
 	}
 
-	apiHandler := api.NewAPI(db, s3)
+	mediaDomain := os.Getenv("MEDIA_DOMAIN")
+	apiHandler := api.NewAPI(db, s3, mediaDomain)
 	router := apiHandler.Router()
 
 	// needed for localstack

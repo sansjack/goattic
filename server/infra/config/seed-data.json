@@ -1,5 +1,6 @@
 [
   {
+    "id": "seed-test-001",
     "apiKey": "dev-test-key-12345",
     "owner": "test-user@example.com",
     "createdAt": "2026-01-28T00:00:00Z",
@@ -7,6 +8,7 @@
     "enabled": true
   },
   {
+    "id": "seed-admin-001",
     "apiKey": "dev-admin-key-67890",
     "owner": "admin@example.com",
     "createdAt": "2026-01-28T00:00:00Z",
