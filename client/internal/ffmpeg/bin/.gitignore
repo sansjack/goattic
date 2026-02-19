@@ -1,0 +1,2 @@
+# Ignore all real binaries fetched via 'make fetch-ffmpeg'
+ffmpeg-*

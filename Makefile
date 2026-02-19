@@ -2,6 +2,7 @@ CDK            := bun --env-file=.env cdk
 CDK_LOCAL      := bun --env-file=.env.local cdklocal
 
 LAMBDAS := server/lambdas/api server/lambdas/file-validator
+CLIENT  := client
 
 .PHONY: help install build deploy diff synth destroy \
         local local-bootstrap local-deploy local-down local-logs \
@@ -37,6 +38,8 @@ install:
 build:
 	@echo "Building Lambda binaries..."
 	@for dir in $(LAMBDAS); do $(MAKE) -C $$dir build; done
+	@echo "Building client..."
+	@$(MAKE) -C $(CLIENT) build
 	@echo "Build complete"
 
 # --- AWS ---
@@ -100,6 +103,40 @@ seed:
 create-key:
 	@if [ -z "$(OWNER)" ]; then echo "Usage: make create-key OWNER=<name>"; exit 1; fi
 	cd server/infra && bun --env-file=.env run scripts/create-key.ts $(OWNER)
+
+FFMPEG_BIN_DIR := client/internal/ffmpeg/bin
+OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH := $(shell uname -m)
+
+fetch-ffmpeg:
+	@echo "Detected platform: $(OS)/$(ARCH)"
+	@if [ "$(OS)" = "darwin" ] && [ "$(ARCH)" = "arm64" ]; then \
+		echo "Downloading ffmpeg for darwin/arm64..."; \
+		curl -fSL "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/snapshot/ffmpeg.zip" -o /tmp/ffmpeg.zip; \
+		unzip -p /tmp/ffmpeg.zip ffmpeg > $(FFMPEG_BIN_DIR)/ffmpeg-darwin-arm64; \
+		chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-darwin-arm64; \
+		rm /tmp/ffmpeg.zip; \
+	elif [ "$(OS)" = "darwin" ] && [ "$(ARCH)" = "x86_64" ]; then \
+		echo "Downloading ffmpeg for darwin/amd64..."; \
+		curl -fSL "https://ffmpeg.martin-riedl.de/redirect/latest/macos/amd64/snapshot/ffmpeg.zip" -o /tmp/ffmpeg.zip; \
+		unzip -p /tmp/ffmpeg.zip ffmpeg > $(FFMPEG_BIN_DIR)/ffmpeg-darwin-amd64; \
+		chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-darwin-amd64; \
+		rm /tmp/ffmpeg.zip; \
+	elif [ "$(OS)" = "linux" ] && [ "$(ARCH)" = "x86_64" ]; then \
+		echo "Downloading ffmpeg for linux/amd64..."; \
+		curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl-shared.tar.xz" -o /tmp/ffmpeg.tar.xz; \
+		tar -xJf /tmp/ffmpeg.tar.xz --wildcards '*/ffmpeg' -O > $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64; \
+		chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64; \
+		rm /tmp/ffmpeg.tar.xz; \
+	elif echo "$(OS)" | grep -qi "mingw\|msys\|cygwin"; then \
+		echo "Downloading ffmpeg for windows/amd64..."; \
+		curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -o /tmp/ffmpeg.zip; \
+		unzip -p /tmp/ffmpeg.zip '*/ffmpeg.exe' > $(FFMPEG_BIN_DIR)/ffmpeg-windows-amd64.exe; \
+		rm /tmp/ffmpeg.zip; \
+	else \
+		echo "Unsupported platform: $(OS)/$(ARCH) — compression will be skipped at runtime"; \
+	fi
+	@echo "Done"
 
 clean:
 	@for dir in $(LAMBDAS); do $(MAKE) -C $$dir clean; done

@@ -1,6 +1,6 @@
 module goattic/client
 
-go 1.25.3
+go 1.26
 
 require (
 	git.sr.ht/~jackmordaunt/go-toast v1.1.2 // indirect
@@ -13,5 +13,6 @@ require (
 	github.com/sergeymakinen/go-bmp v1.0.0 // indirect
 	github.com/sergeymakinen/go-ico v1.0.0-beta.0 // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
+	golang.org/x/image v0.36.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 )
