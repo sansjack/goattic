@@ -105,9 +105,9 @@ create-key:
 	cd server/infra && bun --env-file=.env run scripts/create-key.ts $(OWNER)
 
 FFMPEG_BIN_DIR := client/internal/ffmpeg/bin
-OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH := $(shell uname -m)
 
+fetch-ffmpeg: OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+fetch-ffmpeg: ARCH = $(shell uname -m)
 fetch-ffmpeg:
 	@echo "Detected platform: $(OS)/$(ARCH)"
 	@if [ "$(OS)" = "darwin" ] && [ "$(ARCH)" = "arm64" ]; then \
@@ -124,8 +124,8 @@ fetch-ffmpeg:
 		rm /tmp/ffmpeg.zip; \
 	elif [ "$(OS)" = "linux" ] && [ "$(ARCH)" = "x86_64" ]; then \
 		echo "Downloading ffmpeg for linux/amd64..."; \
-		curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl-shared.tar.xz" -o /tmp/ffmpeg.tar.xz; \
-		tar -xJf /tmp/ffmpeg.tar.xz --wildcards '*/ffmpeg' -O > $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64; \
+		curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz" -o /tmp/ffmpeg.tar.xz; \
+		tar -xJf /tmp/ffmpeg.tar.xz --wildcards '*/bin/ffmpeg' -O > $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64; \
 		chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64; \
 		rm /tmp/ffmpeg.tar.xz; \
 	elif echo "$(OS)" | grep -qi "mingw\|msys\|cygwin"; then \
@@ -136,6 +136,25 @@ fetch-ffmpeg:
 	else \
 		echo "Unsupported platform: $(OS)/$(ARCH) — compression will be skipped at runtime"; \
 	fi
+	@echo "Done"
+
+fetch-ffmpeg-all:
+	@echo "Downloading ffmpeg for all platforms..."
+	curl -fSL "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/snapshot/ffmpeg.zip" -o /tmp/ffmpeg.zip
+	unzip -p /tmp/ffmpeg.zip ffmpeg > $(FFMPEG_BIN_DIR)/ffmpeg-darwin-arm64
+	chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-darwin-arm64
+	rm /tmp/ffmpeg.zip
+	curl -fSL "https://ffmpeg.martin-riedl.de/redirect/latest/macos/amd64/snapshot/ffmpeg.zip" -o /tmp/ffmpeg.zip
+	unzip -p /tmp/ffmpeg.zip ffmpeg > $(FFMPEG_BIN_DIR)/ffmpeg-darwin-amd64
+	chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-darwin-amd64
+	rm /tmp/ffmpeg.zip
+	curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz" -o /tmp/ffmpeg.tar.xz
+	tar -xJf /tmp/ffmpeg.tar.xz --wildcards '*/bin/ffmpeg' -O > $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64
+	chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64
+	rm /tmp/ffmpeg.tar.xz
+	curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -o /tmp/ffmpeg.zip
+	unzip -p /tmp/ffmpeg.zip '*/ffmpeg.exe' > $(FFMPEG_BIN_DIR)/ffmpeg-windows-amd64.exe
+	rm /tmp/ffmpeg.zip
 	@echo "Done"
 
 clean:

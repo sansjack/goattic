@@ -9,8 +9,23 @@ permissions:
   contents: write
 
 jobs:
+  fetch-ffmpeg:
+    name: Fetch ffmpeg binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch all ffmpeg binaries
+        run: make fetch-ffmpeg-all
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-bins
+          path: client/internal/ffmpeg/bin/
+
   build:
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+    needs: fetch-ffmpeg
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,13 +46,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-bins
+          path: client/internal/ffmpeg/bin/
+
+      - name: Restore permissions
+        run: chmod +x client/internal/ffmpeg/bin/ffmpeg-linux-amd64 client/internal/ffmpeg/bin/ffmpeg-darwin-* || true
+
       - uses: actions/setup-go@v5
         with:
           go-version-file: client/go.mod
           cache-dependency-path: client/go.sum
-
-      - name: Fetch ffmpeg
-        run: make fetch-ffmpeg
 
       - name: Build
         working-directory: client
@@ -61,6 +81,9 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+
+      - name: Remove ffmpeg-bins from release artifacts
+        run: rm -rf artifacts/ffmpeg-bins
 
       - uses: softprops/action-gh-release@v2
         with:
