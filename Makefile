@@ -130,8 +130,8 @@ fetch-ffmpeg:
 		rm /tmp/ffmpeg.tar.xz; \
 	elif echo "$(OS)" | grep -qi "mingw\|msys\|cygwin"; then \
 		echo "Downloading ffmpeg for windows/amd64..."; \
-		curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -o /tmp/ffmpeg.zip; \
-		unzip -p /tmp/ffmpeg.zip '*/ffmpeg.exe' > $(FFMPEG_BIN_DIR)/ffmpeg-windows-amd64.exe; \
+		curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -o /tmp/ffmpeg.zip; \
+		unzip -p /tmp/ffmpeg.zip '*/bin/ffmpeg.exe' > $(FFMPEG_BIN_DIR)/ffmpeg-windows-amd64.exe; \
 		rm /tmp/ffmpeg.zip; \
 	else \
 		echo "Unsupported platform: $(OS)/$(ARCH) — compression will be skipped at runtime"; \
@@ -152,8 +152,8 @@ fetch-ffmpeg-all:
 	tar -xJf /tmp/ffmpeg.tar.xz --wildcards '*/bin/ffmpeg' -O > $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64
 	chmod +x $(FFMPEG_BIN_DIR)/ffmpeg-linux-amd64
 	rm /tmp/ffmpeg.tar.xz
-	curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -o /tmp/ffmpeg.zip
-	unzip -p /tmp/ffmpeg.zip '*/ffmpeg.exe' > $(FFMPEG_BIN_DIR)/ffmpeg-windows-amd64.exe
+	curl -fSL "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -o /tmp/ffmpeg.zip
+	unzip -p /tmp/ffmpeg.zip '*/bin/ffmpeg.exe' > $(FFMPEG_BIN_DIR)/ffmpeg-windows-amd64.exe
 	rm /tmp/ffmpeg.zip
 	@echo "Done"
 
