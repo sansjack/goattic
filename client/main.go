@@ -162,7 +162,7 @@ func maybeCompress(filePath string) (string, error) {
 	fmt.Printf("Compressing video...\n")
 
 	cmd := exec.Command(ffmpegBin, "-y", "-i", filePath,
-		"-vcodec", "libx264", "-crf", "28", "-preset", "fast",
+		"-vcodec", "libx264", "-crf", "20", "-preset", "medium",
 		"-acodec", "aac", "-b:a", "128k",
 		out,
 	)
